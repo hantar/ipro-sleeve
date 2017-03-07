@@ -1,2 +1,2 @@
-# ipro-sleeve
+# IPRO - SLEEVE
 IIT IPRO - Basketball Shooting Sleeve
