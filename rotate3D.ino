@@ -1,3 +1,4 @@
+// Libraries
 #include <SPI.h>
 #include <Wire.h>
 #include <Adafruit_Sensor.h>
@@ -13,8 +14,7 @@ Adafruit_Simple_AHRS ahrs(&lsm.getAccel(), &lsm.getMag());
 // Function to configure the sensors on the LSM9DS0 board.
 // You don't need to change anything here, but have the option to select different
 // range and gain values.
-void configureLSM9DS0(void)
-{
+void configureLSM9DS0(void) {
   // 1.) Set the accelerometer range
   lsm.setupAccel(lsm.LSM9DS0_ACCELRANGE_2G);
   //lsm.setupAccel(lsm.LSM9DS0_ACCELRANGE_4G);
