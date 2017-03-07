@@ -10,8 +10,7 @@ const int flexPin = A0;
 const int vibPin = 3;
 int bendVal = 0;
 
-void setupLSM()
-{
+void setupLSM() {
   // 1.) Set the accelerometer range
   lsm.setupAccel(lsm.LSM9DS0_ACCELRANGE_2G);
   //lsm.setupAccel(lsm.LSM9DS0_ACCELRANGE_4G);
@@ -30,10 +29,7 @@ void setupLSM()
   //lsm.setupGyro(lsm.LSM9DS0_GYROSCALE_500DPS);
   //lsm.setupGyro(lsm.LSM9DS0_GYROSCALE_2000DPS);
 }
-
-
-void setup()
-{
+void setup() {
   pinMode(vibPin, OUTPUT); // Set Vibrating Motor Disc as OUTPUT
   Serial.begin(9600);
   delay(500);
@@ -47,35 +43,33 @@ void setup()
   Serial.println("Found LSM9DS0 9DOF");
   Serial.println("");
   Serial.println("");
-
 }
 
 void loop() {
-
-  /*bendVal = analogRead(flexPin); // Send Flex value to bendVal
+  bendVal = analogRead(flexPin); // Send Flex value to bendVal
   Serial.println(bendVal); // Output value
-  bendVal = map(bendVal, 700, 900, 0, 255); // Convert numerical value range from 700-900 to 0-110 - like a degree of bend FIX
-*/
+  bendVal = map(bendVal, 700, 900, 0, 255); // Convert numerical value range from 700-900 to 0-255 (FIX: Calibrate to equate to degrees)
+
   //delay(100);
-  if (bendVal > 85) {
-    digitalWrite(vibPin, HIGH);
-    Serial.print(bendVal);    Serial.println("  --  PERFECT!");
-  } else {
-    digitalWrite(vibPin, LOW);
-    Serial.print("Degrees: "); Serial.print(bendVal); Serial.write(176); Serial.println("");
+  if (bendVal > 85) { // If within range, vibrate to indicate PERFECT!
+    digitalWrite(vibPin, HIGH); // Start vibration
+    Serial.print(bendVal); Serial.println("  --  PERFECT!"); // Display value and indicate PERFECT
+  } else { // Otherwise, keep displaying degrees in Serial
+    digitalWrite(vibPin, LOW); // Stop vibration
+    Serial.print("Degrees: "); Serial.print(bendVal); Serial.write(176); Serial.println(""); // Displays degree value
   }
   bendVal = bendVal + 1;
   lsm.read();
-
-  Serial.print("Accel X: "); Serial.print((int)lsm.accelData.x); Serial.print(" ");
-  Serial.print("Y: "); Serial.print((int)lsm.accelData.y);       Serial.print(" ");
-  Serial.print("Z: "); Serial.println((int)lsm.accelData.z);     Serial.print(" ");
-  Serial.print("Mag X: "); Serial.print((int)lsm.magData.x);     Serial.print(" ");
-  Serial.print("Y: "); Serial.print((int)lsm.magData.y);         Serial.print(" ");
-  Serial.print("Z: "); Serial.println((int)lsm.magData.z);       Serial.print(" ");
-  Serial.print("Gyro X: "); Serial.print((int)lsm.gyroData.x);   Serial.print(" ");
-  Serial.print("Y: "); Serial.print((int)lsm.gyroData.y);        Serial.print(" ");
+  //Display grouping of data
+  Serial.print("Accel X: "); Serial.print((int)lsm.accelData.x); Serial.println(" ");
+  Serial.print("Y: "); Serial.print((int)lsm.accelData.y);       Serial.println(" ");
+  Serial.print("Z: "); Serial.println((int)lsm.accelData.z);     Serial.println(" ");
+  Serial.print("Mag X: "); Serial.print((int)lsm.magData.x);     Serial.println(" ");
+  Serial.print("Y: "); Serial.print((int)lsm.magData.y);         Serial.println(" ");
+  Serial.print("Z: "); Serial.println((int)lsm.magData.z);       Serial.println(" ");
+  Serial.print("Gyro X: "); Serial.print((int)lsm.gyroData.x);   Serial.println(" ");
+  Serial.print("Y: "); Serial.print((int)lsm.gyroData.y);        Serial.println(" ");
   Serial.print("Z: "); Serial.println((int)lsm.gyroData.z);      Serial.println(" ");
   Serial.print("Temp: "); Serial.print((int)lsm.temperature);    Serial.println(" ");
-  delay(1000);
+  delay(500);
 }
