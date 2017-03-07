@@ -15,6 +15,13 @@ float z = 0;
 float xyz = 0;
 float xZ = 1300;
 
+float minX = 0;
+float maxX = 0;
+float minY = 0;
+float maxY = 0;
+float minZ = 0;
+float maxZ = 0;
+
 void setupLSM() {
   // 1.) Set the accelerometer range
   lsm.setupAccel(lsm.LSM9DS0_ACCELRANGE_2G);
@@ -45,24 +52,53 @@ void setup() {
   Serial.println("Found LSM9DS0 9DOF");
   Serial.println("");
   Serial.println("");
+  pinMode(ledPin, OUTPUT);
 }
 void loop() {
   lsm.read(); // grab data off i2c
-  for (int i = 0; i < 9600; i++) {
-    x = lsm.accelData.x + x;
+  /* ------ Sample Data ------
+    for (int i = 0; i < 1000; i++) {
+    lsm.read();
+    if (lsm.accelData.x < minX) minX = lsm.accelData.x;
+    if (lsm.accelData.x > maxX) maxX = lsm.accelData.x;
+    if (lsm.accelData.y < minY) minY = lsm.accelData.y;
+    if (lsm.accelData.y > maxY) maxY = lsm.accelData.y;
+    if (lsm.accelData.z < minZ) minZ = lsm.accelData.z;
+    if (lsm.accelData.z > maxZ) maxZ = lsm.accelData.z;
+    }
+    Serial.println(" ");
+    Serial.print(minX); Serial.print(" , "); Serial.println(maxX);
+    Serial.print(minY); Serial.print(" , "); Serial.println(maxY);
+    Serial.print(minZ); Serial.print(" , "); Serial.println(maxZ);
+    delay(1000);
+  */
+  //digitalWrite(ledPin, HIGH);
+  if (lsm.accelData.x > 0) { 
+    digitalWrite(ledPin, HIGH);
+    Serial.println("HIGH");
   }
-  x = x / 9600;
-  //x = map(x, -25000, 25000, -100, 100);
-  //x = lsm.accelData.x;
-  y = lsm.accelData.y;
-  z = lsm.accelData.z;
-  //x = map(x, -400
-  xyz = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
-  Serial.print("x: "); Serial.println(x);
-  Serial.print("y: "); Serial.println(y);
-  Serial.print("z: "); Serial.println(z);
-  Serial.print("xyz: "); Serial.println(xyz);
-  //delay(1000);
+  if (lsm.accelData.x < 0) {
+    digitalWrite(ledPin, LOW);
+    Serial.println("low");
+  }
+  
+  /*------ Calibration ------/
+    for (int i = 0; i < 9600; i++) {
+    x = lsm.accelData.x + x;
+    }
+    x = x / 9600;
+    //x = map(x, -25000, 25000, -100, 100);
+    //x = lsm.accelData.x;
+    y = lsm.accelData.y;
+    z = lsm.accelData.z;
+    //x = map(x, -400
+    xyz = sqrt(pow(x, 2) + pow(y, 2) + pow(z, 2));
+    Serial.print("x: "); Serial.println(x);
+    Serial.print("y: "); Serial.println(y);
+    Serial.print("z: "); Serial.println(z);
+    Serial.print("xyz: "); Serial.println(xyz);
+    //delay(1000);
+    /*/
 
   /* ----- LSM VARS ------
     lsm.accelData.x
