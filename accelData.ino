@@ -1,4 +1,4 @@
-/* Version 1.0
+/* Version 1.1
    Displays XYZ acceleration and supports openFramework ESP graph software
 */
 
