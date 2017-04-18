@@ -51,7 +51,6 @@ void setup()
   Serial.println("BLE UART Peripheral");
 }
 
-
 void loop()
 {
  
