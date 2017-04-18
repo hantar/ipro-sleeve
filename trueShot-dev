@@ -1,0 +1,123 @@
+// Curie Bluetooth Library
+#include <CurieBLE.h>
+// I2C Library
+#include <Wire.h>
+
+const int VIB = 3;  // Vibrator Motor Disc Pin - MUST BE PWM
+const int workedLED = 7; // Debug LED
+const int btLED = 4; // FLORA LED Pin
+const int FLEX = A2; // Flex Sensor Pin
+int BEND = 0; // Initial Bend Value
+
+String cmdInput; // Command received from BLE- Auto:Stop, Auto:Up, Auto:Right, Auto:Left, Auto:Back, Auto:Auto
+String lastCmd = "";
+
+BLEPeripheral blePeripheral;
+BLEService uartService = BLEService("6E400001B5A3F393E0A9E50E24DCCA9E");
+// create characteristics
+BLECharacteristic rxCharacteristic = BLECharacteristic("6E400002B5A3F393E0A9E50E24DCCA9E", BLEWriteWithoutResponse, 20);  // == TX on central (central control app)
+BLECharacteristic txCharacteristic = BLECharacteristic("6E400003B5A3F393E0A9E50E24DCCA9E", BLENotify , 20); // == RX on central (central control app)
+
+bool connectionStatus = false;
+
+void setup()
+{
+  // Setting up serial connection
+  Serial.begin(9600);
+
+  // join i2c bus (address optional for master)
+  //Wire.begin();
+
+  // wait to make sure I2C is initialized
+  delayMicroseconds(10000);
+
+  // specifying connection LED pin as output
+  pinMode(VIB, OUTPUT); // Vibration Motor Disc
+  pinMode(workedLED, OUTPUT); // DEBUG LED
+  pinMode(BLE, OUTPUT); // Bluetooth Connection Established
+
+  blePeripheral.setLocalName("devUART");
+  blePeripheral.setAdvertisedServiceUuid(uartService.uuid());
+  // add service, rx and tx characteristics:
+  blePeripheral.addAttribute(uartService);
+  blePeripheral.addAttribute(rxCharacteristic);
+  blePeripheral.addAttribute(txCharacteristic);
+  // assign event handlers for connected, disconnected to peripheral
+  blePeripheral.setEventHandler(BLEConnected, blePeripheralConnectHandler);
+  blePeripheral.setEventHandler(BLEDisconnected, blePeripheralDisconnectHandler);
+  rxCharacteristic.setEventHandler(BLEWritten, rxCharacteristicWritten);
+  blePeripheral.begin();
+  delay(5000);
+  Serial.println("BLE UART Peripheral");
+}
+
+
+void loop()
+{
+ 
+  /**Serial.println(BEND); // Output value
+  BEND = map(BEND, -784, -892, 0, 255); // Convert numerical value range from 700-900 to 0-255
+  if (BEND > 85) { // If within range, vibrate to indicate PERFECT!
+    digitalWrite(VIB, HIGH); // Start vibration
+    Serial.print(BEND); Serial.println("  --  PERFECT!"); // Display value and indicate PERFECT
+  } else { // Otherwise, keep displaying degrees in Serial
+    digitalWrite(VIB, LOW); // Stop vibration
+    Serial.print("Degrees: "); Serial.print(BEND); Serial.write(176); Serial.println(""); // Displays degree value
+  }**/
+
+  blePeripheral.poll();
+
+  // Check BLE connection before executing any code
+  if (connectionStatus)
+  {
+    // Turn on connection LED
+    digitalWrite(btLED, HIGH);
+
+    if (String(cmdInput) == "1") {
+      digitalWrite(workedLED, HIGH);
+      digitalWrite(VIB, HIGH);
+    } else if (String(cmdInput) == "0") {
+      digitalWrite(workedLED, LOW);
+      digitalWrite(VIB, LOW);
+    }
+    lastCmd = cmdInput;
+  }
+  else
+  {
+    Serial.println("not connected");
+    // Turn off connection LED
+    digitalWrite(btLED, LOW);
+  }
+} // void loop()
+
+void blePeripheralConnectHandler(BLECentral& central) {
+  // central connected event handler
+  Serial.print("Connected event, central: ");
+  Serial.println(central.address());
+  digitalWrite(btLED, HIGH);
+  connectionStatus = true;
+}
+
+void blePeripheralDisconnectHandler(BLECentral& central) {
+  // central disconnected event handler
+  Serial.print("Disconnected event, central: ");
+  Serial.println(central.address());
+  digitalWrite(btLED, LOW);
+  connectionStatus = false;
+}
+
+void rxCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic) {
+  // central wrote new value to characteristic, update LED
+  Serial.print("Characteristic event, written: ");
+  if (characteristic.value()) {       //null pointer check
+    int len = characteristic.valueLength(); //get size
+    if (cmdInput) {
+      lastCmd = cmdInput;
+    }
+    cmdInput = "";
+    for (int i = 0; i < len; i++) {
+      cmdInput += (char) * (characteristic.value() + i);
+    }
+    Serial.println(cmdInput);
+  }
+}
