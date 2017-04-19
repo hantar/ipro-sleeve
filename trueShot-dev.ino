@@ -21,15 +21,15 @@ Adafruit_DRV2605 drv;
 
 void setup(){
 	Serial.begin(9600);
-	if(debug==true){Serial.println("DEBUG ACTIVE - Welcome to TRUE Shot\nCreated by IIT Students for IPRO\tSpring 2017")}
+	if(debug==true){Serial.println("DEBUG ACTIVE - Welcome to TRUE Shot\nCreated by IIT Students for IPRO\tSpring 2017");}
 	// DRV2605L
 	drv.begin();
 	delayMicroseconds(10000);
 	drv.selectLibrary(1);
 	drv.setMode(DRV2605_MODE_INTTRIG);
-	if(debug==true){Serial.println("Haptic Feedback Ready!")}
+	if(debug==true){Serial.println("Haptic Feedback Ready!");}
 	// Curie
-	Wire.being();
+	Wire.begin();
 	delayMicroseconds(10000);
 	blePeripheral.setLocalName("TRUE Shot");
   blePeripheral.setAdvertisedServiceUuid(uartService.uuid());
@@ -40,9 +40,9 @@ void setup(){
   blePeripheral.setEventHandler(BLEDisconnected, blePeripheralDisconnectHandler);
   rxCharacteristic.setEventHandler(BLEWritten, rxCharacteristicWritten);
   blePeripheral.begin();
-  if(debug==true){Serial.println("BLE UART...\nLoading...")}
+  if(debug==true){Serial.println("BLE UART...\nLoading...");}
   delay(5000);
-  if(debug==true){Serial.println("BLE UART Ready!");delay(500)}
+  if(debug==true){Serial.println("BLE UART Ready!");delay(500);}
 }
 
 void loop(){
@@ -54,41 +54,40 @@ void loop(){
 		}
 		lastCmd=cmdInput;
 	}else{
-		if(debug==true){Serial.println("No Connection - ");Serial.println(randomSeed(bendValue))}
+		if(debug==true){Serial.println("No Connection - ");Serial.println(random(0,9999));}
 		digitalWrite(btLED, LOW);
 	}
 }
 
 void hapticFeedback(){//Adafruit DRV2605L Haptic Feedback Microcontroller
-	if(debug==true){Serial.print("\nEffect # ");Serial.println(effect)}
+	if(debug==true){Serial.print("\nEffect # ");Serial.println(effect);}
 	drv.setWaveform(0, effect);//Start of Effect
 	drv.setWaveform(1, 0);//End of Waveform
 	drv.go();//Play Effect
 }
 
 void blePeripheralConnectHandler(BLECentral& central){
-  if(debug==true){Serial.print("Connected event, central: ");Serial.println(central.address())}
+  if(debug==true){Serial.print("Connected event, central: ");Serial.println(central.address());}
   digitalWrite(btLED,HIGH);
   btStatus=true;
 }
 
 void blePeripheralDisconnectHandler(BLECentral& central){
-  if(debug==true){Serial.print("Disconnected event, central: ");Serial.println(central.address())}
+  if(debug==true){Serial.print("Disconnected event, central: ");Serial.println(central.address());}
   digitalWrite(btLED,LOW);
   btStatus=false;
 }
 
 void rxCharacteristicWritten(BLECentral& central, BLECharacteristic& characteristic){
-  
   if(characteristic.value()){
     int len=characteristic.valueLength();
     if(cmdInput){
-      lastCmd=cmdInput
+      lastCmd=cmdInput;
     }
     cmdInput="";
-    for(inti=0;i<len;i++){
-      cmdInput+=(char)*(characteristic.value()+i)
+    for(int i=0;i<len;i++){
+      cmdInput+=(char)*(characteristic.value()+i);
     }
-    if(debug==true){Serial.print("Characteristic event, written: ");Serial.println(cmdInput)}
+    if(debug==true){Serial.print("Characteristic event, written: ");Serial.println(cmdInput);}
   }
 }
