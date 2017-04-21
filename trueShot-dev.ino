@@ -1,13 +1,13 @@
 //Libraries
 #include <Wire.h>
 #include <CurieBLE.h>
-#include <Adafruit_DRV2605.h>
+#include "Adafruit_DRV2605.h"
 //Variables
-uint8_t effect=1;//Effect # - Page 60: https://goo.gl/rSMYH7
-const bool debug=false;//Set to 'true' to debug code
-const int vibrationDisc=3;//Will have to be PWM based on effect
-const int btLED=4;//Flora LED
-const int flexSensor=A2;
+const int effect=44;//Effect # - Page 60: https://goo.gl/rSMYH7
+const int transition=86;
+const bool debug=true;//Set to 'true' to debug code
+const int btLED=3;//Flora LED
+const int flexPin=2;
 int bendValue=0;
 bool btStatus=false;
 //Curie
@@ -21,17 +21,17 @@ Adafruit_DRV2605 drv;
 
 void setup(){
 	Serial.begin(9600);
-	if(debug==true){Serial.println("DEBUG ACTIVE - Welcome to TRUE Shot\nCreated by IIT Students for IPRO\tSpring 2017");}
+	if(debug==true){Serial.println("DEBUG ACTIVE - Welcome to TRUE Shot\nCreated by IIT Students for IPRO - Spring 2017");}
 	// DRV2605L
 	drv.begin();
 	delayMicroseconds(10000);
-	drv.selectLibrary(1);
 	drv.setMode(DRV2605_MODE_INTTRIG);
+	drv.selectLibrary(1);
 	if(debug==true){Serial.println("Haptic Feedback Ready!");}
 	// Curie
 	Wire.begin();
 	delayMicroseconds(10000);
-	blePeripheral.setLocalName("TRUE Shot");
+	blePeripheral.setLocalName("TRUEShot");
   blePeripheral.setAdvertisedServiceUuid(uartService.uuid());
   blePeripheral.addAttribute(uartService);
   blePeripheral.addAttribute(rxCharacteristic);
@@ -47,34 +47,53 @@ void setup(){
 
 void loop(){
 	blePeripheral.poll();
+  bendValue=analogRead(flexPin);//Serial.println(bendValue);
+  /*bendValue=700;
+  if(bendValue<820){
+    goodFollowThrough();
+  }*/
 	if(btStatus){
 		digitalWrite(btLED, HIGH);
 		if(String(cmdInput)=="1"){
-			hapticFeedback();
+			goodFollowThrough();
+		} else if(String(cmdInput)=="2"){
+      badMotion();
 		}
-		lastCmd=cmdInput;
+		cmdInput="0";
 	}else{
-		if(debug==true){Serial.println("No Connection - ");Serial.println(random(0,9999));}
+		if(debug==true){Serial.print("No Connection - ");Serial.println(random(0,9999));}
 		digitalWrite(btLED, LOW);
 	}
 }
 
-void hapticFeedback(){//Adafruit DRV2605L Haptic Feedback Microcontroller
+void goodFollowThrough(){//Adafruit DRV2605L Haptic Feedback Microcontroller
 	if(debug==true){Serial.print("\nEffect # ");Serial.println(effect);}
-	drv.setWaveform(0, effect);//Start of Effect
-	drv.setWaveform(1, 0);//End of Waveform
+  drv.setWaveform(0,14);//Transition to Effect
+  drv.setWaveform(1,44);
+  drv.setWaveform(2,0);//End of Waveform
 	drv.go();//Play Effect
+  if(debug==true){Serial.println("\nPlayed");}
+}
+
+void badMotion(){//Adafruit DRV2605L Haptic Feedback Microcontroller
+  if(debug==true){Serial.print("\nEffect # ");Serial.println(effect);}
+  drv.setWaveform(0,86);//Transition to Effect
+  drv.setWaveform(1,52);//Effects
+  drv.setWaveform(2,7);
+  drv.setWaveform(3,52);
+  drv.setWaveform(4,0);//End of Waveform
+  drv.go();//Play Effect
+  if(debug==true){Serial.println("\nPlayed");}
+  delay(2000);
 }
 
 void blePeripheralConnectHandler(BLECentral& central){
   if(debug==true){Serial.print("Connected event, central: ");Serial.println(central.address());}
-  digitalWrite(btLED,HIGH);
   btStatus=true;
 }
 
 void blePeripheralDisconnectHandler(BLECentral& central){
   if(debug==true){Serial.print("Disconnected event, central: ");Serial.println(central.address());}
-  digitalWrite(btLED,LOW);
   btStatus=false;
 }
 
